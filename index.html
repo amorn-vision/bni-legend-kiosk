@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>BNI Legend — ยินดีต้อนรับ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #C8102E;
+      --red-dark: #8E0B20;
+      --gold: #C6A15B;
+      --ink: #1B1B1B;
+      --line: #E6E0DC;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0;
+      background: #140308; color: #fff;
+      font-family: "Sarabun", "Noto Sans Thai", "Sukhumvit Set", sans-serif;
+      font-size: 16px; line-height: 1.55;
+      min-height: 100dvh; overflow: hidden;
+    }
+    button, input, select { font-family: inherit; font-size: 16px; }
+    .hidden { display: none !important; }
+    .btn {
+      appearance: none; border: 0; cursor: pointer;
+      border-radius: 999px; padding: 12px 18px; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      text-decoration: none; color: inherit;
+    }
+    .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary { background: var(--red); color: #fff; font-size: 17px; }
+    .btn-primary:hover { background: var(--red-dark); }
+    .btn-ghost { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: #fff; color: var(--red);
+      display: grid; place-items: center;
+      font-family: "Oswald", "Sarabun", sans-serif;
+      font-weight: 700; letter-spacing: 0.5px; font-size: 18px;
+      flex: 0 0 auto;
+    }
+    .brand-name {
+      font-family: "Oswald", "Sarabun", sans-serif;
+      font-size: 16px; letter-spacing: 1.2px; line-height: 1; font-weight: 600;
+    }
+    .brand-sub { font-size: 11px; opacity: 0.9; margin-top: 3px; }
+    .kiosk-shell {
+      min-height: 100dvh; min-height: 100svh;
+      display: flex; flex-direction: column; position: relative;
+    }
+    .kiosk-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 14px;
+      background: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 100%);
+      z-index: 5;
+    }
+    .kiosk-tools { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .kiosk-tools .btn { padding: 7px 12px; font-size: 13px; }
+    .kiosk-event {
+      padding: 8px 14px; background: #1B1B1B; display: flex; gap: 10px; align-items: center;
+      border-bottom: 1px solid rgba(198,161,91,0.35);
+    }
+    .kiosk-event label { margin: 0; color: #C6A15B; font-size: 12px; letter-spacing: 0.4px; }
+    .kiosk-event select {
+      background: #111; color: #fff; border: 1px solid #444; flex: 1;
+      border-radius: 10px; padding: 8px 10px;
+    }
+    .kiosk-stage { flex: 1; position: relative; background: #000; min-height: 0; }
+    #reader, #reader video, #reader canvas {
+      width: 100% !important; height: 100% !important;
+      min-height: 100%; object-fit: cover;
+    }
+    #reader {
+      position: relative; z-index: 1;
+      height: 100%; min-height: 0; border-radius: 0; background: transparent;
+    }
+    #reader video { transform: scaleX(-1); }
+    .kiosk-cam-fallback {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 38%, rgba(110, 62, 54, 0.42), transparent 46%),
+        radial-gradient(ellipse at 50% 100%, rgba(200, 16, 46, 0.16), transparent 50%),
+        linear-gradient(180deg, #241014 0%, #0c0708 100%);
+    }
+    .kiosk-idle-ui {
+      position: absolute; inset: 0; z-index: 3;
+      pointer-events: none;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding-top: 86px; padding-bottom: 132px;
+    }
+    .kiosk-stats {
+      position: absolute; top: 12px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 10px;
+      width: min(520px, calc(100% - 24px));
+    }
+    .kiosk-stat {
+      flex: 1;
+      background: rgba(10, 4, 6, 0.78);
+      border: 1px solid rgba(198,161,91,0.45);
+      border-radius: 16px;
+      padding: 8px 10px 9px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.28);
+    }
+    .kiosk-stat b {
+      display: block;
+      font-size: clamp(22px, 3.4vh, 32px);
+      line-height: 1.15; color: #fff; font-weight: 700; white-space: nowrap;
+    }
+    .kiosk-stat b .kiosk-stat-num { color: inherit; font-size: inherit; font-weight: inherit; display: inline; margin: 0; }
+    .kiosk-stat > span {
+      display: block; margin-top: 2px; font-size: 12px; color: #C6A15B; font-weight: 600;
+    }
+    .kiosk-stat-arrived b { color: #F4EEE8; }
+    .kiosk-viewfinder {
+      width: min(62vmin, 420px); aspect-ratio: 1; position: relative;
+      animation: vfPulse 2.2s ease-in-out infinite;
+    }
+    .kiosk-viewfinder .vf {
+      position: absolute; width: 58px; height: 58px;
+      border-color: #C6A15B; border-style: solid;
+      filter: drop-shadow(0 0 6px rgba(198,161,91,0.45));
+    }
+    .kiosk-viewfinder .vf-tl { top: 0; left: 0; border-width: 6px 0 0 6px; border-top-left-radius: 10px; }
+    .kiosk-viewfinder .vf-tr { top: 0; right: 0; border-width: 6px 6px 0 0; border-top-right-radius: 10px; }
+    .kiosk-viewfinder .vf-bl { bottom: 0; left: 0; border-width: 0 0 6px 6px; border-bottom-left-radius: 10px; }
+    .kiosk-viewfinder .vf-br { bottom: 0; right: 0; border-width: 0 6px 6px 0; border-bottom-right-radius: 10px; }
+    @keyframes vfPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.65; transform: scale(0.985); }
+    }
+    .kiosk-idle-copy {
+      position: absolute; left: 50%; bottom: 22px;
+      transform: translateX(-50%);
+      width: min(880px, calc(100% - 32px));
+      text-align: center;
+      background: rgba(10, 4, 6, 0.78);
+      border: 1px solid rgba(198,161,91,0.55);
+      border-radius: 22px;
+      padding: 14px 22px 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    }
+    .kiosk-idle-title {
+      margin: 0; font-size: clamp(24px, 4.4vw, 40px);
+      font-weight: 700; line-height: 1.3; color: #fff;
+    }
+    .kiosk-idle-sub {
+      margin: 6px 0 0; font-size: clamp(15px, 2.1vw, 20px);
+      color: #C6A15B; font-weight: 600;
+    }
+    .kiosk-start, .kiosk-pin {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      background: radial-gradient(circle at 50% 20%, #7A0A1C, #140308 70%);
+      z-index: 4; padding: 24px; text-align: center;
+    }
+    .kiosk-pin { z-index: 8; }
+    .kiosk-start h1, .kiosk-pin h1 { font-size: clamp(28px, 5vw, 44px); margin: 0 0 10px; }
+    .kiosk-start p, .kiosk-pin p { color: rgba(255,255,255,0.8); max-width: 520px; margin: 0 auto 22px; }
+    .kiosk-kicker {
+      font-family: "Oswald", sans-serif; letter-spacing: 3px; color: var(--gold);
+      font-size: 16px; margin-bottom: 8px;
+    }
+    .pin-form { width: min(420px, 100%); margin: 0 auto; text-align: left; }
+    .pin-form label { display: block; color: #C6A15B; font-size: 13px; margin-bottom: 6px; }
+    .pin-form input {
+      width: 100%; border-radius: 14px; border: 1px solid rgba(198,161,91,0.55);
+      background: rgba(0,0,0,0.35); color: #fff;
+      padding: 14px 16px; font-size: 22px; letter-spacing: 4px; text-align: center;
+    }
+    .pin-error { color: #FFD2D8; min-height: 1.4em; margin: 10px 0 0; font-weight: 600; text-align: center; }
+    .kiosk-overlay {
+      position: absolute; inset: 0; z-index: 6;
+      display: grid; place-items: center; padding: 24px; text-align: center;
+    }
+    .kiosk-overlay.welcome { background: linear-gradient(165deg, #7A0A1C 0%, #C8102E 45%, #4A0710 100%); }
+    .kiosk-overlay.again { background: linear-gradient(165deg, #3A2A10 0%, #8A5A12 50%, #2A1C08 100%); }
+    .kiosk-overlay.warn { background: linear-gradient(165deg, #2A1014 0%, #5C0715 50%, #1B1B1B 100%); }
+    .kiosk-overlay.hidden { display: none !important; }
+    .kiosk-overlay-inner { width: min(920px, 100%); animation: kioskPop 0.45s ease-out; }
+    .kiosk-hello { font-size: clamp(36px, 7vw, 72px); font-weight: 700; line-height: 1.15; margin: 0 0 8px; text-wrap: balance; }
+    .kiosk-guest { font-size: clamp(32px, 6vw, 64px); font-weight: 700; line-height: 1.2; margin: 0 0 12px; text-wrap: balance; }
+    .kiosk-company { font-size: clamp(18px, 3vw, 28px); opacity: 0.92; margin: 0; }
+    .kiosk-overlay-msg { font-size: clamp(22px, 3.4vw, 32px); margin: 12px 0 0; opacity: 0.95; }
+    .kiosk-check {
+      width: 84px; height: 84px; border-radius: 50%;
+      margin: 0 auto 18px; display: grid; place-items: center;
+      background: rgba(255,255,255,0.12); border: 3px solid var(--gold);
+      font-size: 40px; color: var(--gold);
+    }
+    @keyframes kioskPop {
+      from { opacity: 0; transform: scale(0.88); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .toast {
+      position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px);
+      background: #1B1B1B; color: #fff; padding: 10px 14px; border-radius: 999px;
+      opacity: 0; pointer-events: none; transition: .2s; z-index: 50; max-width: calc(100% - 32px);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @media (orientation: landscape) {
+      .kiosk-hello { font-size: clamp(32px, 6vh, 64px); }
+      .kiosk-guest { font-size: clamp(28px, 5.5vh, 56px); }
+      .kiosk-viewfinder { width: min(48vh, 340px); }
+      .kiosk-idle-title { font-size: clamp(24px, 4.8vh, 38px); }
+      .kiosk-idle-ui { padding-top: 100px; padding-bottom: 118px; }
+    }
+    @media (orientation: portrait) and (max-width: 640px) {
+      .kiosk-top { padding: 8px 10px; }
+      .kiosk-tools .btn { padding: 6px 9px; font-size: 12px; }
+      .kiosk-event { padding: 6px 10px; }
+      .kiosk-idle-ui { padding-top: 92px; padding-bottom: 128px; }
+      .kiosk-stats { top: 8px; width: min(100%, calc(100% - 16px)); gap: 8px; }
+      .kiosk-stat { padding: 7px 8px 8px; border-radius: 14px; }
+      .kiosk-stat b { font-size: clamp(20px, 6vw, 26px); }
+      .kiosk-stat > span { font-size: 11px; }
+      .kiosk-viewfinder { width: min(58vmin, 280px); }
+      .kiosk-idle-copy { bottom: 12px; padding: 12px 14px 13px; border-radius: 18px; width: min(100%, calc(100% - 16px)); }
+      .kiosk-idle-title { font-size: clamp(20px, 5.6vw, 28px); }
+      .kiosk-idle-sub { font-size: 14px; }
+    }
+  </style>
+</head>
+<body class="kiosk">
+  <div class="kiosk-shell">
+    <header class="kiosk-top">
+      <div class="brand">
+        <div class="brand-mark">BNI</div>
+        <div class="brand-text">
+          <div class="brand-name">BNI LEGEND</div>
+          <div class="brand-sub" id="staffUser">คีออสก์เช็กอิน</div>
+        </div>
+      </div>
+      <div class="kiosk-tools">
+        <button type="button" class="btn btn-ghost" id="btnMute">ปิดเสียง</button>
+        <button type="button" class="btn btn-ghost" id="btnFull">เต็มจอ</button>
+        <button type="button" class="btn btn-ghost" id="btnChangePin">เปลี่ยน PIN</button>
+      </div>
+    </header>
+    <div class="kiosk-event">
+      <label for="eventSel">งาน</label>
+      <select id="eventSel"></select>
+    </div>
+    <div class="kiosk-stage">
+      <div class="kiosk-cam-fallback" id="camFallback" aria-hidden="true"></div>
+      <div id="reader"></div>
+      <div class="kiosk-idle-ui" id="scanHint">
+        <div class="kiosk-stats" aria-live="polite">
+          <div class="kiosk-stat">
+            <b><span id="countRegistered" class="kiosk-stat-num">–</span> คน</b>
+            <span>ลงทะเบียนแล้ว</span>
+          </div>
+          <div class="kiosk-stat kiosk-stat-arrived">
+            <b><span id="countArrived" class="kiosk-stat-num">–</span> คน</b>
+            <span>มาแล้ว</span>
+          </div>
+        </div>
+        <div class="kiosk-viewfinder" aria-hidden="true">
+          <span class="vf vf-tl"></span>
+          <span class="vf vf-tr"></span>
+          <span class="vf vf-bl"></span>
+          <span class="vf vf-br"></span>
+        </div>
+        <div class="kiosk-idle-copy">
+          <p class="kiosk-idle-title">กรุณาแสดง QR Code ที่หน้ากล้อง</p>
+          <p class="kiosk-idle-sub">ระบบจะเช็กอินให้อัตโนมัติ</p>
+        </div>
+      </div>
+      <div class="kiosk-start hidden" id="startScreen">
+        <div>
+          <div class="kiosk-kicker">GIVERS GAIN</div>
+          <h1>ยินดีต้อนรับสู่<br>BNI Legend Chapter</h1>
+          <p>ตั้งแท็บเล็ตหรือมือถือที่โต๊ะลงทะเบียน อนุญาตกล้องหน้า แล้วเริ่มโหมดคีออสก์ ระบบจะเช็กอินให้อัตโนมัติเมื่อสแกนการ์ด QR ของแขก</p>
+          <button type="button" class="btn btn-primary" id="btnStart" style="width:auto;min-width:240px;font-size:20px;padding:14px 28px">เริ่มโหมดคีออสก์</button>
+        </div>
+      </div>
+      <div class="kiosk-pin" id="pinScreen">
+        <div>
+          <div class="kiosk-kicker">GIVERS GAIN</div>
+          <h1>ใส่รหัส PIN ของคีออสก์</h1>
+          <p>รหัสนี้ตั้งโดยแอดมินในหลังบ้าน เครื่องนี้จำ PIN ไว้ให้จนกว่าจะกดเปลี่ยน</p>
+          <form class="pin-form" id="pinForm" autocomplete="off">
+            <label for="pinInput">รหัส PIN</label>
+            <input id="pinInput" type="password" inputmode="numeric" maxlength="12" autocomplete="off" autofocus>
+            <p class="pin-error" id="pinError"></p>
+            <button type="submit" class="btn btn-primary" id="btnPin" style="width:100%;margin-top:8px;font-size:18px;padding:14px 20px">เข้าสู่คีออสก์</button>
+          </form>
+        </div>
+      </div>
+      <div class="kiosk-overlay hidden" id="overlay">
+        <div class="kiosk-overlay-inner">
+          <div class="kiosk-check" id="overlayIcon">✓</div>
+          <div class="kiosk-kicker" id="overlayKicker">BNI LEGEND CHAPTER</div>
+          <p class="kiosk-hello" id="overlayHello"></p>
+          <p class="kiosk-guest" id="overlayName"></p>
+          <p class="kiosk-company" id="overlayCompany"></p>
+          <p class="kiosk-overlay-msg" id="overlayMsg"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    (function () {
+      var API_BASE = 'https://script.google.com/macros/s/AKfycbxgs91gTdaI8mZ4I3mlhRdcq26wDL8yKDmWDmWlIktCCeE8dXg3auxHAfdIhWmCezEB/exec';
+      var PIN_KEY = 'bniLegendKioskPin';
+      var DEBOUNCE_MS = 8000;
+      var WELCOME_MS = 4000;
+      var WARN_MS = 3200;
+      var COUNT_POLL_MS = 30000;
+
+      var currentPin = '';
+      var events = [];
+      var scanner = null;
+      var scanning = false;
+      var busy = false;
+      var muted = false;
+      var wakeLock = null;
+      var lastQr = '';
+      var lastAt = 0;
+      var resetTimer = null;
+      var audioCtx = null;
+      var countTimer = null;
+
+      function $(id) { return document.getElementById(id); }
+
+      function toast(msg) {
+        var el = $('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function () { el.classList.remove('show'); }, 3200);
+      }
+
+      function api(action, extra) {
+        var body = { action: action, pin: currentPin };
+        if (extra) {
+          Object.keys(extra).forEach(function (k) { body[k] = extra[k]; });
+        }
+        return fetch(API_BASE, {
+          method: 'POST',
+          mode: 'cors',
+          credentials: 'omit',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(body)
+        }).then(function (res) {
+          return res.text().then(function (text) {
+            var data;
+            try { data = JSON.parse(text); }
+            catch (e) { throw new Error('เชื่อมต่อระบบไม่สำเร็จ'); }
+            if (!data || data.ok === false) {
+              var err = new Error((data && data.message) || 'ไม่สำเร็จ');
+              err.code = data && data.error;
+              throw err;
+            }
+            return data;
+          });
+        });
+      }
+
+      function showPinScreen(message) {
+        if (scanner && scanning) {
+          try { scanner.stop(); } catch (e) {}
+          scanning = false;
+        }
+        $('startScreen').classList.add('hidden');
+        $('pinScreen').classList.remove('hidden');
+        $('pinError').textContent = message || '';
+        $('pinInput').value = '';
+        setTimeout(function () { try { $('pinInput').focus(); } catch (e) {} }, 50);
+      }
+
+      function hidePinScreen() {
+        $('pinScreen').classList.add('hidden');
+        $('startScreen').classList.remove('hidden');
+      }
+
+      function rememberPin(pin) {
+        currentPin = pin;
+        try { localStorage.setItem(PIN_KEY, pin); } catch (e) {}
+      }
+
+      function forgetPin() {
+        currentPin = '';
+        try { localStorage.removeItem(PIN_KEY); } catch (e) {}
+      }
+
+      function applyCounts(counts) {
+        if (!counts) return;
+        var reg = counts.registered;
+        var arrived = counts.checked_in;
+        if ($('countRegistered')) $('countRegistered').textContent = (reg == null || reg === '') ? '–' : String(reg);
+        if ($('countArrived')) $('countArrived').textContent = (arrived == null || arrived === '') ? '–' : String(arrived);
+      }
+
+      function fillEvents(list) {
+        events = list || [];
+        var sel = $('eventSel');
+        sel.innerHTML = '';
+        events.forEach(function (ev) {
+          var o = document.createElement('option');
+          o.value = ev.id;
+          o.textContent = (ev.date_th || ev.date) + ' · ' + ev.title;
+          sel.appendChild(o);
+        });
+        var upcoming = events.filter(function (e) { return e.active; })[0] || events[0];
+        if (upcoming) sel.value = upcoming.id;
+      }
+
+      function refreshCounts() {
+        var eventId = $('eventSel').value;
+        if (!eventId || !currentPin) return Promise.resolve();
+        return api('kioskCounts', { eventId: eventId }).then(function (res) {
+          applyCounts(res.counts || res);
+        }).catch(function (err) {
+          if (err && (err.code === 'pin_wrong' || err.code === 'pin_locked' || err.code === 'pin_unset' || err.code === 'pin_required')) {
+            forgetPin();
+            showPinScreen(err.message);
+          }
+        });
+      }
+
+      function startCountPoll() {
+        if (countTimer) clearInterval(countTimer);
+        refreshCounts();
+        countTimer = setInterval(refreshCounts, COUNT_POLL_MS);
+      }
+
+      function afterPinAccepted(list) {
+        fillEvents(list);
+        hidePinScreen();
+        startCountPoll();
+      }
+
+      function submitPin(pin) {
+        pin = String(pin || '').trim();
+        if (!pin) {
+          $('pinError').textContent = 'กรุณาใส่รหัส PIN';
+          return Promise.resolve(false);
+        }
+        $('btnPin').disabled = true;
+        $('pinError').textContent = 'กำลังตรวจสอบ…';
+        currentPin = pin;
+        return api('kioskEvents').then(function (res) {
+          rememberPin(pin);
+          $('pinError').textContent = '';
+          afterPinAccepted(res.events || []);
+          return true;
+        }).catch(function (err) {
+          if (err && err.code !== 'pin_unset') currentPin = '';
+          $('pinError').textContent = (err && err.message) || 'รหัส PIN ไม่ถูกต้อง';
+          return false;
+        }).then(function (ok) {
+          $('btnPin').disabled = false;
+          return ok;
+        });
+      }
+
+      $('pinForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        submitPin($('pinInput').value);
+      });
+
+      $('btnChangePin').onclick = function () {
+        forgetPin();
+        showPinScreen('');
+      };
+
+      $('eventSel').addEventListener('change', function () { refreshCounts(); });
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+          refreshCounts();
+          requestWakeLock();
+        }
+      });
+
+      function unlockAudio() {
+        try {
+          var Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return;
+          if (!audioCtx) audioCtx = new Ctx();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+        } catch (e) {}
+        unlockSpeech();
+      }
+
+      var thaiVoice = null;
+      var speechTimer = null;
+      var speechUnlocked = false;
+      var onWelcomeSpeechEnded = null;
+
+      function refreshThaiVoice() {
+        thaiVoice = pickThaiVoice();
+      }
+
+      function pickThaiVoice() {
+        if (!window.speechSynthesis || !speechSynthesis.getVoices) return null;
+        var voices = speechSynthesis.getVoices() || [];
+        var exact = null;
+        var prefix = null;
+        for (var i = 0; i < voices.length; i++) {
+          var lang = String(voices[i].lang || '').toLowerCase().replace(/_/g, '-');
+          if (lang === 'th-th' || lang === 'th') {
+            exact = voices[i];
+            break;
+          }
+          if (!prefix && lang.indexOf('th') === 0) prefix = voices[i];
+        }
+        return exact || prefix || null;
+      }
+
+      if (window.speechSynthesis) {
+        refreshThaiVoice();
+        if (speechSynthesis.addEventListener) {
+          speechSynthesis.addEventListener('voiceschanged', refreshThaiVoice);
+        }
+        speechSynthesis.onvoiceschanged = refreshThaiVoice;
+      }
+
+      function unlockSpeech() {
+        if (speechUnlocked || !window.speechSynthesis) return;
+        try {
+          speechSynthesis.getVoices();
+          var u = new SpeechSynthesisUtterance(' ');
+          u.lang = 'th-TH';
+          u.volume = 0;
+          speechSynthesis.speak(u);
+          speechSynthesis.cancel();
+          speechUnlocked = true;
+        } catch (e) {}
+      }
+
+      function cancelWelcomeSpeech() {
+        if (speechTimer) {
+          clearTimeout(speechTimer);
+          speechTimer = null;
+        }
+        onWelcomeSpeechEnded = null;
+        if (window.speechSynthesis) {
+          try { speechSynthesis.cancel(); } catch (e) {}
+        }
+      }
+
+      function notifySpeechEnded() {
+        var cb = onWelcomeSpeechEnded;
+        onWelcomeSpeechEnded = null;
+        if (cb) cb();
+      }
+
+      function spokenGuestName(v) {
+        if (!v) return '';
+        var first = String(v.first_name_th || '').trim();
+        if (first) return first;
+        var nick = String(v.nickname || '').trim();
+        if (nick) return nick;
+        return guestName(v).replace(/^คุณ\s*/, '').trim();
+      }
+
+      function scheduleWelcomeSpeech(visitor) {
+        cancelWelcomeSpeech();
+        if (muted || !window.speechSynthesis) return false;
+        var name = spokenGuestName(visitor);
+        if (!name) return false;
+        var text = 'ยินดีต้อนรับ คุณ ' + name;
+        speechTimer = setTimeout(function () {
+          speechTimer = null;
+          if (muted) {
+            notifySpeechEnded();
+            return;
+          }
+          refreshThaiVoice();
+          if (!thaiVoice) {
+            notifySpeechEnded();
+            return;
+          }
+          try {
+            speechSynthesis.cancel();
+            var u = new SpeechSynthesisUtterance(text);
+            u.lang = 'th-TH';
+            u.rate = 0.95;
+            u.voice = thaiVoice;
+            u.onend = function () { notifySpeechEnded(); };
+            u.onerror = function () { notifySpeechEnded(); };
+            speechSynthesis.speak(u);
+          } catch (e) {
+            notifySpeechEnded();
+          }
+        }, 600);
+        return true;
+      }
+
+      function scheduleWelcomeHold(willSpeak) {
+        clearTimeout(resetTimer);
+        var startedAt = Date.now();
+        var speechEnded = !willSpeak;
+        var closed = false;
+
+        function closeNow() {
+          if (closed) return;
+          closed = true;
+          onWelcomeSpeechEnded = null;
+          clearTimeout(resetTimer);
+          hideOverlay();
+          busy = false;
+        }
+
+        function tryClose() {
+          if (closed) return;
+          var elapsed = Date.now() - startedAt;
+          if (elapsed < WELCOME_MS) {
+            resetTimer = setTimeout(tryClose, WELCOME_MS - elapsed);
+            return;
+          }
+          if (!speechEnded && elapsed < 6000) {
+            resetTimer = setTimeout(closeNow, 6000 - elapsed);
+            return;
+          }
+          closeNow();
+        }
+
+        if (willSpeak) {
+          onWelcomeSpeechEnded = function () {
+            speechEnded = true;
+            tryClose();
+          };
+        }
+        resetTimer = setTimeout(tryClose, WELCOME_MS);
+      }
+
+      function playWelcomeChime() {
+        if (muted) return;
+        unlockAudio();
+        if (!audioCtx) return;
+        try {
+          var now = audioCtx.currentTime;
+          [523.25, 659.25, 783.99].forEach(function (freq, i) {
+            var o = audioCtx.createOscillator();
+            var g = audioCtx.createGain();
+            o.type = 'sine';
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0, now);
+            g.gain.linearRampToValueAtTime(0.11, now + 0.02 + i * 0.09);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.5 + i * 0.09);
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.start(now + i * 0.09);
+            o.stop(now + 0.55 + i * 0.09);
+          });
+        } catch (e) {}
+      }
+
+      function requestWakeLock() {
+        if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+        navigator.wakeLock.request('screen').then(function (lock) {
+          wakeLock = lock;
+          lock.addEventListener('release', function () { wakeLock = null; });
+        }).catch(function () {});
+      }
+
+      function toggleFullscreen() {
+        var root = document.documentElement;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          var req = root.requestFullscreen || root.webkitRequestFullscreen;
+          if (req) req.call(root).catch(function () {});
+        } else {
+          var exit = document.exitFullscreen || document.webkitExitFullscreen;
+          if (exit) exit.call(document);
+        }
+      }
+
+      $('btnFull').onclick = function () { toggleFullscreen(); };
+      $('btnMute').onclick = function () {
+        muted = !muted;
+        $('btnMute').textContent = muted ? 'เปิดเสียง' : 'ปิดเสียง';
+        if (muted) cancelWelcomeSpeech();
+        else unlockAudio();
+      };
+
+      function guestName(v) {
+        if (!v) return '';
+        var th = [v.first_name_th, v.last_name_th].filter(Boolean).join(' ').trim();
+        if (th) return 'คุณ ' + th;
+        return v.display_name || '';
+      }
+
+      function showOverlay(kind, visitor, message) {
+        var overlay = $('overlay');
+        overlay.classList.remove('hidden', 'welcome', 'again', 'warn');
+        overlay.classList.add(kind === 'welcome' || kind === 'again' ? kind : 'warn');
+        var inner = overlay.querySelector('.kiosk-overlay-inner');
+        inner.style.animation = 'none';
+        void inner.offsetWidth;
+        inner.style.animation = '';
+        $('overlayIcon').textContent = (kind === 'welcome' || kind === 'again') ? '✓' : '!';
+        $('overlayKicker').textContent = 'BNI LEGEND CHAPTER';
+        var willSpeak = false;
+        if (kind === 'welcome') {
+          $('overlayHello').textContent = 'ยินดีต้อนรับ';
+          $('overlayName').textContent = guestName(visitor);
+          $('overlayCompany').textContent = (visitor && visitor.company) || '';
+          $('overlayMsg').textContent = '';
+          playWelcomeChime();
+          willSpeak = scheduleWelcomeSpeech(visitor);
+        } else if (kind === 'again') {
+          $('overlayHello').textContent = 'ยินดีต้อนรับอีกครั้ง';
+          $('overlayName').textContent = guestName(visitor);
+          $('overlayCompany').textContent = (visitor && visitor.company) || '';
+          $('overlayMsg').textContent = message || 'ท่านลงทะเบียนเรียบร้อยแล้ว';
+        } else {
+          $('overlayHello').textContent = 'ขออภัย';
+          $('overlayName').textContent = '';
+          $('overlayCompany').textContent = '';
+          $('overlayMsg').textContent = message || 'กรุณาติดต่อทีม Visitor Host';
+        }
+        $('scanHint').classList.add('hidden');
+        return willSpeak;
+      }
+
+      function hideOverlay() {
+        cancelWelcomeSpeech();
+        $('overlay').classList.add('hidden');
+        $('overlay').classList.remove('welcome', 'again', 'warn');
+        $('scanHint').classList.remove('hidden');
+      }
+
+      function scheduleReset(ms) {
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(function () {
+          hideOverlay();
+          busy = false;
+        }, ms);
+      }
+
+      function onScan(text) {
+        text = String(text || '').trim();
+        if (!text || busy) return;
+        var now = Date.now();
+        if (text === lastQr && (now - lastAt) < DEBOUNCE_MS) return;
+        lastQr = text;
+        lastAt = now;
+        var eventId = $('eventSel').value;
+        if (!eventId) {
+          busy = true;
+          showOverlay('warn', null, 'กรุณาเลือกงานก่อนเริ่มสแกน');
+          scheduleReset(WARN_MS);
+          return;
+        }
+        busy = true;
+        api('kioskCheckin', { qrText: text, eventId: eventId }).then(function (res) {
+          res = res || {};
+          if (res.counts) applyCounts(res.counts);
+          if (res.status === 'checked_in') {
+            var speaking = showOverlay('welcome', res.visitor, '');
+            scheduleWelcomeHold(speaking);
+          } else if (res.status === 'already') {
+            showOverlay('again', res.visitor, 'ท่านลงทะเบียนเรียบร้อยแล้ว');
+            scheduleReset(WELCOME_MS);
+          } else if (res.status === 'wrong_event') {
+            showOverlay('warn', res.visitor, 'QR นี้เป็นของงานประชุมรอบอื่น กรุณาติดต่อทีม Visitor Host');
+            scheduleReset(WARN_MS);
+          } else {
+            showOverlay('warn', null, (res.message || 'ไม่พบข้อมูลจาก QR นี้') + ' กรุณาติดต่อทีม Visitor Host');
+            scheduleReset(WARN_MS);
+          }
+        }).catch(function (err) {
+          if (err && (err.code === 'pin_wrong' || err.code === 'pin_locked' || err.code === 'pin_unset' || err.code === 'pin_required')) {
+            busy = false;
+            forgetPin();
+            showPinScreen(err.message);
+            return;
+          }
+          showOverlay('warn', null, (err && err.message) || 'เกิดข้อผิดพลาด กรุณาติดต่อทีม Visitor Host');
+          scheduleReset(WARN_MS);
+        });
+      }
+
+      function startCamera() {
+        if (typeof Html5Qrcode === 'undefined') {
+          toast('โหลดตัวสแกนไม่สำเร็จ');
+          return Promise.resolve(false);
+        }
+        if (!scanner) scanner = new Html5Qrcode('reader');
+        function begin(cameraConfig) {
+          var boxFn = function (w, h) {
+            var s = Math.floor(Math.min(w, h) * 0.62);
+            return { width: s, height: s };
+          };
+          return scanner.start(cameraConfig, { fps: 8, qrbox: boxFn }, onScan);
+        }
+        return begin({ facingMode: { ideal: 'user' } }).then(function () {
+          scanning = true;
+          return true;
+        }).catch(function () {
+          return begin({ facingMode: 'environment' }).then(function () {
+            scanning = true;
+            toast('ใช้กล้องหลังแทน เพราะเปิดกล้องหน้าไม่ได้');
+            return true;
+          }).catch(function (err) {
+            toast('เปิดกล้องไม่ได้: ' + ((err && err.message) || err));
+            return false;
+          });
+        });
+      }
+
+      function startKiosk() {
+        unlockAudio();
+        requestWakeLock();
+        $('startScreen').classList.add('hidden');
+        startCamera().then(function (ok) {
+          if (!ok) toast('ยังเปิดกล้องไม่ได้ แต่พร้อมเมื่ออนุญาตกล้องแล้ว กดเริ่มอีกครั้งได้');
+        });
+      }
+
+      $('btnStart').onclick = function () { startKiosk(); };
+
+      window.__kioskPreview = function (kind, visitor, message) {
+        $('pinScreen').classList.add('hidden');
+        $('startScreen').classList.add('hidden');
+        if (kind === 'idle') {
+          hideOverlay();
+          if (!scanning) startCamera();
+          return;
+        }
+        showOverlay(kind, visitor, message);
+      };
+
+      var saved = '';
+      try { saved = localStorage.getItem(PIN_KEY) || ''; } catch (e) { saved = ''; }
+      if (saved) {
+        submitPin(saved).then(function (ok) {
+          if (!ok) {
+            forgetPin();
+            showPinScreen($('pinError').textContent || 'กรุณาใส่รหัส PIN อีกครั้ง');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
