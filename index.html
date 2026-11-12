@@ -73,16 +73,14 @@
       background: #111; color: #fff; border: 1px solid #444; flex: 1;
       border-radius: 10px; padding: 8px 10px;
     }
-    .kiosk-stage { flex: 1; position: relative; background: #000; min-height: 0; }
-    #reader, #reader video, #reader canvas {
-      width: 100% !important; height: 100% !important;
-      min-height: 100%; object-fit: cover;
+    .kiosk-stage { flex: 1; position: relative; background: #000; min-height: 0; overflow: hidden; }
+    #camVideo {
+      position: absolute; inset: 0; z-index: 1;
+      width: 100%; height: 100%;
+      object-fit: cover; background: #000;
     }
-    #reader {
-      position: relative; z-index: 1;
-      height: 100%; min-height: 0; border-radius: 0; background: transparent;
-    }
-    #reader video { transform: scaleX(-1); }
+    #camVideo.mirror { transform: scaleX(-1); }
+    #decodeCanvas { position: absolute; width: 1px; height: 1px; left: -9999px; top: -9999px; opacity: 0; pointer-events: none; }
     .kiosk-cam-fallback {
       position: absolute; inset: 0; z-index: 0; pointer-events: none;
       background:
@@ -95,7 +93,7 @@
       pointer-events: none;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      padding-top: 86px; padding-bottom: 132px;
+      padding-top: 86px; padding-bottom: 168px;
     }
     .kiosk-stats {
       position: absolute; top: 12px; left: 50%;
@@ -158,10 +156,84 @@
       margin: 6px 0 0; font-size: clamp(15px, 2.1vw, 20px);
       color: #C6A15B; font-weight: 600;
     }
+    .kiosk-cam-panel {
+      position: absolute; inset: 0; z-index: 4;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px 16px 16px;
+      pointer-events: none;
+      background: rgba(10, 3, 6, 0.55);
+    }
+    .kiosk-cam-panel.live {
+      inset: auto; left: 0; right: 0; bottom: 0;
+      background: transparent;
+      justify-content: flex-end;
+      padding: 0 16px 12px;
+    }
+    .kiosk-cam-panel.behind-start { visibility: hidden; }
+    .btn-open-cam {
+      pointer-events: auto;
+      min-width: min(420px, calc(100% - 24px));
+      min-height: 64px;
+      font-size: 24px;
+      padding: 16px 28px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    }
+    .kiosk-cam-panel.live .btn-open-cam { display: none; }
+    .cam-error {
+      pointer-events: auto;
+      width: min(640px, calc(100% - 16px));
+      margin: 16px 0 0;
+      background: rgba(20, 4, 8, 0.92);
+      border: 1px solid rgba(255, 180, 190, 0.45);
+      border-radius: 18px;
+      padding: 14px 16px;
+      color: #FFD6DB;
+      font-weight: 600;
+      text-align: left;
+      white-space: pre-line;
+      max-height: 36vh;
+      overflow: auto;
+    }
+    .kiosk-cam-panel.live .cam-error { display: none; }
+    .kiosk-alt {
+      pointer-events: auto;
+      width: min(640px, calc(100% - 16px));
+      margin-top: 16px;
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    }
+    .kiosk-alt .btn, .kiosk-alt label.btn {
+      padding: 10px 14px; font-size: 14px;
+    }
+    .manual-form {
+      width: 100%;
+      margin-top: 4px;
+      background: rgba(10, 4, 6, 0.82);
+      border: 1px solid rgba(198,161,91,0.4);
+      border-radius: 16px;
+      padding: 10px 12px 12px;
+      text-align: left;
+    }
+    .manual-form label { display: block; color: #C6A15B; font-size: 12px; margin-bottom: 6px; }
+    .manual-row { display: flex; gap: 8px; }
+    .manual-row input {
+      flex: 1; min-width: 0;
+      border-radius: 12px; border: 1px solid rgba(198,161,91,0.55);
+      background: rgba(0,0,0,0.35); color: #fff;
+      padding: 10px 12px; letter-spacing: 0.5px;
+    }
+    .manual-row .btn { flex: 0 0 auto; padding: 10px 16px; }
+    .kiosk-cam-panel.live .kiosk-alt {
+      width: min(880px, 100%);
+      margin: 0;
+    }
+    .kiosk-cam-panel.live .manual-form {
+      display: none;
+    }
+    .kiosk-cam-panel.live.show-manual .manual-form { display: block; }
     .kiosk-start, .kiosk-pin {
       position: absolute; inset: 0; display: grid; place-items: center;
       background: radial-gradient(circle at 50% 20%, #7A0A1C, #140308 70%);
-      z-index: 4; padding: 24px; text-align: center;
+      z-index: 5; padding: 24px; text-align: center;
     }
     .kiosk-pin { z-index: 8; }
     .kiosk-start h1, .kiosk-pin h1 { font-size: clamp(28px, 5vw, 44px); margin: 0 0 10px; }
@@ -218,7 +290,7 @@
       .kiosk-top { padding: 8px 10px; }
       .kiosk-tools .btn { padding: 6px 9px; font-size: 12px; }
       .kiosk-event { padding: 6px 10px; }
-      .kiosk-idle-ui { padding-top: 92px; padding-bottom: 128px; }
+      .kiosk-idle-ui { padding-top: 92px; padding-bottom: 150px; }
       .kiosk-stats { top: 8px; width: min(100%, calc(100% - 16px)); gap: 8px; }
       .kiosk-stat { padding: 7px 8px 8px; border-radius: 14px; }
       .kiosk-stat b { font-size: clamp(20px, 6vw, 26px); }
@@ -227,6 +299,7 @@
       .kiosk-idle-copy { bottom: 12px; padding: 12px 14px 13px; border-radius: 18px; width: min(100%, calc(100% - 16px)); }
       .kiosk-idle-title { font-size: clamp(20px, 5.6vw, 28px); }
       .kiosk-idle-sub { font-size: 14px; }
+      .btn-open-cam { font-size: 22px; min-height: 60px; }
     }
   </style>
 </head>
@@ -252,7 +325,8 @@
     </div>
     <div class="kiosk-stage">
       <div class="kiosk-cam-fallback" id="camFallback" aria-hidden="true"></div>
-      <div id="reader"></div>
+      <video id="camVideo" playsinline webkit-playsinline muted autoplay disablepictureinpicture></video>
+      <canvas id="decodeCanvas" aria-hidden="true"></canvas>
       <div class="kiosk-idle-ui" id="scanHint">
         <div class="kiosk-stats" aria-live="polite">
           <div class="kiosk-stat">
@@ -272,15 +346,33 @@
         </div>
         <div class="kiosk-idle-copy">
           <p class="kiosk-idle-title">กรุณาแสดง QR Code ที่หน้ากล้อง</p>
-          <p class="kiosk-idle-sub">ระบบจะเช็กอินให้อัตโนมัติ</p>
+          <p class="kiosk-idle-sub" id="idleSub">กดปุ่มเปิดกล้องก่อน แล้วถือการ์ด QR เข้ามาในกรอบ</p>
+        </div>
+      </div>
+      <div class="kiosk-cam-panel behind-start" id="camPanel">
+        <button type="button" class="btn btn-primary btn-open-cam" id="btnOpenCam">เปิดกล้อง</button>
+        <p class="cam-error hidden" id="camError" role="alert"></p>
+        <div class="kiosk-alt">
+          <button type="button" class="btn btn-ghost" id="btnFlipCam">สลับเป็นกล้องหลัง</button>
+          <label class="btn btn-ghost" for="qrPhoto">ถ่ายหรือเลือกรูป QR
+            <input type="file" id="qrPhoto" accept="image/*" capture="environment" hidden>
+          </label>
+          <button type="button" class="btn btn-ghost" id="btnManual">พิมพ์รหัสแขก</button>
+          <form id="manualForm" class="manual-form hidden">
+            <label for="manualId">พิมพ์รหัสบนการ์ด QR เช่น V-20261113-B7MWXP</label>
+            <div class="manual-row">
+              <input id="manualId" name="manualId" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="V-XXXXXXXX-XXXXXX">
+              <button type="submit" class="btn btn-primary">เช็กอิน</button>
+            </div>
+          </form>
         </div>
       </div>
       <div class="kiosk-start hidden" id="startScreen">
         <div>
           <div class="kiosk-kicker">GIVERS GAIN</div>
           <h1>ยินดีต้อนรับสู่<br>BNI Legend Chapter</h1>
-          <p>ตั้งแท็บเล็ตหรือมือถือที่โต๊ะลงทะเบียน อนุญาตกล้องหน้า แล้วเริ่มโหมดคีออสก์ ระบบจะเช็กอินให้อัตโนมัติเมื่อสแกนการ์ด QR ของแขก</p>
-          <button type="button" class="btn btn-primary" id="btnStart" style="width:auto;min-width:240px;font-size:20px;padding:14px 28px">เริ่มโหมดคีออสก์</button>
+          <p>ตั้งแท็บเล็ตที่โต๊ะลงทะเบียน โดยหันกล้องหน้าเข้าหาแขก จากนั้นกดเปิดกล้องและอนุญาตเมื่อมีข้อความเด้งขึ้น ระบบจะเช็กอินให้อัตโนมัติเมื่อสแกนการ์ด QR</p>
+          <button type="button" class="btn btn-primary" id="btnStart" style="width:auto;min-width:260px;font-size:22px;padding:16px 28px">เปิดกล้อง</button>
         </div>
       </div>
       <div class="kiosk-pin" id="pinScreen">
@@ -310,7 +402,7 @@
   </div>
   <div id="toast" class="toast"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="vendor/jsQR.js"></script>
   <script>
     (function () {
       var API_BASE = 'https://script.google.com/macros/s/AKfycbxgs91gTdaI8mZ4I3mlhRdcq26wDL8yKDmWDmWlIktCCeE8dXg3auxHAfdIhWmCezEB/exec';
@@ -319,11 +411,11 @@
       var WELCOME_MS = 4000;
       var WARN_MS = 3200;
       var COUNT_POLL_MS = 30000;
+      var KIOSK_BUILD = '2026-11-13-ipad-cam';
 
       var currentPin = '';
       var events = [];
-      var scanner = null;
-      var scanning = false;
+      var kioskStarted = false;
       var busy = false;
       var muted = false;
       var wakeLock = null;
@@ -332,6 +424,14 @@
       var resetTimer = null;
       var audioCtx = null;
       var countTimer = null;
+      var cam = {
+        stream: null,
+        facing: 'user',
+        running: false,
+        starting: false,
+        raf: 0,
+        lastDetectAt: 0
+      };
 
       function $(id) { return document.getElementById(id); }
 
@@ -341,6 +441,90 @@
         el.classList.add('show');
         clearTimeout(toast._t);
         toast._t = setTimeout(function () { el.classList.remove('show'); }, 3200);
+      }
+
+      function isIosLike() {
+        var ua = navigator.userAgent || '';
+        if (/iPad|iPhone|iPod/.test(ua)) return true;
+        return navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1;
+      }
+
+      function isIosChrome() {
+        var ua = navigator.userAgent || '';
+        return isIosLike() && (/CriOS/i.test(ua) || (/Chrome/i.test(ua) && !/Safari\/\d/.test(ua)) || /EdgiOS|FxiOS|OPiOS/i.test(ua));
+      }
+
+      function cameraHelpText(kind) {
+        var intro;
+        if (kind === 'denied') {
+          intro = 'ไม่สามารถเปิดกล้องได้ เพราะยังไม่ได้อนุญาตให้เว็บนี้ใช้กล้อง';
+        } else if (kind === 'notfound') {
+          intro = 'ไม่พบกล้องบนเครื่องนี้';
+        } else if (kind === 'inuse') {
+          intro = 'เปิดกล้องไม่ได้ เพราะกล้องกำลังถูกแอปอื่นใช้ หรือถูกปิดไว้ชั่วคราว';
+        } else if (kind === 'play') {
+          intro = 'เบราว์เซอร์ยังไม่เริ่มภาพจากกล้อง กรุณากดปุ่ม “เปิดกล้อง” อีกครั้ง';
+        } else if (kind === 'unsupported') {
+          intro = 'เบราว์เซอร์นี้เปิดกล้องสดไม่สำเร็จ กรุณาใช้ Chrome หรือ Safari แล้วเปิดผ่านลิงก์ HTTPS';
+        } else {
+          intro = 'เปิดกล้องไม่สำเร็จ กรุณากด “เปิดกล้อง” อีกครั้ง หรือใช้วิธีสำรองด้านล่าง';
+        }
+        var ios = [
+          '',
+          'ถ้าใช้ Chrome บน iPad:',
+          '1. เปิดแอปตั้งค่า (Settings) ของ iPad',
+          '2. เลื่อนหาและแตะ Chrome',
+          '3. เปิด “กล้อง” (Camera) ให้เป็นอนุญาต',
+          '4. กลับมาที่หน้านี้ แล้วกด “เปิดกล้อง” — ถ้ามีข้อความเด้งขึ้น ให้กด Allow',
+          '',
+          'ถ้าใช้ Safari:',
+          '1. ตั้งค่า > Safari > กล้อง — เลือกถามหรืออนุญาต',
+          '2. หรือแตะปุ่ม aA ด้านซ้ายของแถบที่อยู่ > การตั้งค่าเว็บไซต์ > กล้อง > อนุญาต',
+          '3. ปิดแท็บนี้แล้วเปิดใหม่ หรือรีเฟรชหน้า แล้วกด “เปิดกล้อง”'
+        ].join('\n');
+        if (isIosLike() || kind === 'denied' || kind === 'play' || kind === 'unsupported') return intro + ios;
+        return intro + '\n\nตรวจในตั้งค่าของเบราว์เซอร์ว่าอนุญาตกล้องสำหรับเว็บนี้แล้ว จากนั้นกด “เปิดกล้อง” อีกครั้ง';
+      }
+
+      function cameraErrorMessage(err) {
+        var name = (err && (err.name || err.code)) || '';
+        if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+          return cameraHelpText('denied');
+        }
+        if (name === 'NotFoundError' || name === 'DevicesNotFoundError' || name === 'OverconstrainedError') {
+          return cameraHelpText('notfound');
+        }
+        if (name === 'NotReadableError' || name === 'TrackStartError' || name === 'AbortError') {
+          return cameraHelpText('inuse');
+        }
+        if (name === 'PlayError') return cameraHelpText('play');
+        return cameraHelpText('other') + (err && err.message ? ('\n\nรายละเอียด: ' + err.message) : '');
+      }
+
+      function showCamError(text) {
+        var el = $('camError');
+        if (!text) {
+          el.textContent = '';
+          el.classList.add('hidden');
+          return;
+        }
+        el.textContent = text;
+        el.classList.remove('hidden');
+      }
+
+      function updateCamUi() {
+        var panel = $('camPanel');
+        var startHidden = $('startScreen').classList.contains('hidden');
+        var pinHidden = $('pinScreen').classList.contains('hidden');
+        panel.classList.toggle('behind-start', !startHidden || !pinHidden);
+        panel.classList.toggle('live', !!cam.running);
+        $('camVideo').classList.toggle('mirror', cam.facing === 'user');
+        $('camVideo').classList.toggle('hidden', !cam.running);
+        $('btnFlipCam').textContent = cam.facing === 'user' ? 'สลับเป็นกล้องหลัง' : 'สลับเป็นกล้องหน้า';
+        $('idleSub').textContent = cam.running
+          ? 'ระบบจะเช็กอินให้อัตโนมัติ หรือใช้ปุ่มด้านล่างถ้าสแกนไม่ได้'
+          : 'กดปุ่มเปิดกล้องก่อน แล้วถือการ์ด QR เข้ามาในกรอบ';
+        if (cam.running) showCamError('');
       }
 
       function api(action, extra) {
@@ -370,21 +554,211 @@
         });
       }
 
-      function showPinScreen(message) {
-        if (scanner && scanning) {
-          try { scanner.stop(); } catch (e) {}
-          scanning = false;
+      function stopCameraTracks() {
+        if (cam.raf) {
+          cancelAnimationFrame(cam.raf);
+          cam.raf = 0;
         }
+        if (cam.stream) {
+          cam.stream.getTracks().forEach(function (t) {
+            try { t.stop(); } catch (e) {}
+          });
+          cam.stream = null;
+        }
+        var video = $('camVideo');
+        try { video.pause(); } catch (e) {}
+        video.srcObject = null;
+        cam.running = false;
+      }
+
+      function prepareVideo(video) {
+        video.setAttribute('autoplay', '');
+        video.setAttribute('muted', '');
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.setAttribute('disablepictureinpicture', '');
+        video.autoplay = true;
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+        video.controls = false;
+        try { video.disablePictureInPicture = true; } catch (e) {}
+      }
+
+      function constraintSets(facing) {
+        return [
+          { audio: false, video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+          { audio: false, video: { facingMode: { exact: facing } } },
+          { audio: false, video: { facingMode: facing } },
+          { audio: false, video: true }
+        ];
+      }
+
+      function getUserMediaChain(sets, index) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          var err = new Error('no getUserMedia');
+          err.name = 'UnsupportedError';
+          return Promise.reject(err);
+        }
+        index = index || 0;
+        return navigator.mediaDevices.getUserMedia(sets[index]).catch(function (err) {
+          if (index + 1 < sets.length) return getUserMediaChain(sets, index + 1);
+          throw err;
+        });
+      }
+
+      function waitAndPlay(video) {
+        return new Promise(function (resolve, reject) {
+          var settled = false;
+          var timer;
+          function cleanup() {
+            video.removeEventListener('loadedmetadata', onReady);
+            video.removeEventListener('canplay', onReady);
+            video.removeEventListener('playing', onReady);
+            clearTimeout(timer);
+          }
+          function succeed() {
+            if (settled) return;
+            if (video.videoWidth < 2 || video.readyState < 2) return;
+            settled = true;
+            cleanup();
+            resolve();
+          }
+          function fail(err) {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            var wrapped = err || new Error('play failed');
+            if (!wrapped.name) wrapped.name = 'PlayError';
+            reject(wrapped);
+          }
+          function onReady() {
+            var p = video.play();
+            if (p && p.then) {
+              p.then(function () { succeed(); }).catch(function (e) { fail(e); });
+            } else {
+              succeed();
+            }
+          }
+          video.addEventListener('loadedmetadata', onReady);
+          video.addEventListener('canplay', onReady);
+          video.addEventListener('playing', onReady);
+          timer = setTimeout(function () {
+            if (video.videoWidth >= 2 && video.readyState >= 2 && !video.paused) succeed();
+            else fail(Object.assign(new Error('กล้องไม่พร้อม'), { name: 'PlayError' }));
+          }, 8000);
+          prepareVideo(video);
+          var playAttempt = video.play();
+          if (playAttempt && playAttempt.then) playAttempt.then(function () { succeed(); }).catch(function () {});
+          if (video.videoWidth >= 2 && video.readyState >= 2) onReady();
+        });
+      }
+
+      function decodeFrame() {
+        var video = $('camVideo');
+        var canvas = $('decodeCanvas');
+        if (!cam.running || busy || video.readyState < 2) return;
+        var vw = video.videoWidth;
+        var vh = video.videoHeight;
+        if (vw < 16 || vh < 16) return;
+        var maxEdge = 720;
+        var scale = Math.min(1, maxEdge / Math.max(vw, vh));
+        var w = Math.max(32, Math.round(vw * scale));
+        var h = Math.max(32, Math.round(vh * scale));
+        if (canvas.width !== w) canvas.width = w;
+        if (canvas.height !== h) canvas.height = h;
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) return;
+        ctx.drawImage(video, 0, 0, w, h);
+        var img;
+        try { img = ctx.getImageData(0, 0, w, h); }
+        catch (e) { return; }
+        if (typeof jsQR !== 'function') return;
+        var result = jsQR(img.data, w, h, { inversionAttempts: 'attemptBoth' });
+        if (result && result.data) onScan(result.data);
+      }
+
+      function startDecodeLoop() {
+        if (cam.raf) cancelAnimationFrame(cam.raf);
+        function tick(ts) {
+          cam.raf = requestAnimationFrame(tick);
+          if (!cam.running) return;
+          if (ts && cam.lastDetectAt && (ts - cam.lastDetectAt) < 140) return;
+          cam.lastDetectAt = ts || Date.now();
+          try { decodeFrame(); } catch (e) {}
+        }
+        cam.raf = requestAnimationFrame(tick);
+      }
+
+      function startCamera() {
+        if (cam.starting) return Promise.resolve(cam.running);
+        if (typeof jsQR !== 'function') {
+          showCamError('โหลดตัวอ่าน QR ไม่สำเร็จ กรุณารีเฟรชหน้าเว็บ แล้วกดเปิดกล้องอีกครั้ง\n\nถ้ายังไม่ได้ สามารถถ่ายรูป QR หรือพิมพ์รหัสแขกด้านล่างได้');
+          updateCamUi();
+          return Promise.resolve(false);
+        }
+        if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showCamError(cameraHelpText('unsupported'));
+          updateCamUi();
+          return Promise.resolve(false);
+        }
+        cam.starting = true;
+        showCamError('');
+        $('btnOpenCam').disabled = true;
+        $('btnOpenCam').textContent = 'กำลังเปิดกล้อง…';
+        stopCameraTracks();
+        updateCamUi();
+        var video = $('camVideo');
+        prepareVideo(video);
+        return getUserMediaChain(constraintSets(cam.facing)).then(function (stream) {
+          cam.stream = stream;
+          video.srcObject = stream;
+          prepareVideo(video);
+          return waitAndPlay(video);
+        }).then(function () {
+          cam.running = true;
+          cam.starting = false;
+          $('btnOpenCam').disabled = false;
+          $('btnOpenCam').textContent = 'เปิดกล้อง';
+          try {
+            cam.stream.getVideoTracks().forEach(function (track) {
+              track.addEventListener('ended', function () {
+                cam.running = false;
+                showCamError('สัญญาณกล้องถูกตัด กรุณากด “เปิดกล้อง” อีกครั้ง');
+                updateCamUi();
+              });
+            });
+          } catch (e) {}
+          startDecodeLoop();
+          updateCamUi();
+          return true;
+        }).catch(function (err) {
+          cam.starting = false;
+          cam.running = false;
+          stopCameraTracks();
+          $('btnOpenCam').disabled = false;
+          $('btnOpenCam').textContent = 'เปิดกล้อง';
+          showCamError(cameraErrorMessage(err));
+          updateCamUi();
+          return false;
+        });
+      }
+
+      function showPinScreen(message) {
+        kioskStarted = false;
+        stopCameraTracks();
         $('startScreen').classList.add('hidden');
         $('pinScreen').classList.remove('hidden');
         $('pinError').textContent = message || '';
         $('pinInput').value = '';
+        updateCamUi();
         setTimeout(function () { try { $('pinInput').focus(); } catch (e) {} }, 50);
       }
 
       function hidePinScreen() {
         $('pinScreen').classList.add('hidden');
         $('startScreen').classList.remove('hidden');
+        updateCamUi();
       }
 
       function rememberPin(pin) {
@@ -484,6 +858,10 @@
         if (document.visibilityState === 'visible') {
           refreshCounts();
           requestWakeLock();
+          if (kioskStarted && !cam.running && !cam.starting) {
+            showCamError('หน้าจอกลับมาแล้ว กรุณากด “เปิดกล้อง” อีกครั้งเพื่อสแกนต่อ');
+            updateCamUi();
+          }
         }
       });
 
@@ -787,55 +1165,119 @@
         });
       }
 
-      function startCamera() {
-        if (typeof Html5Qrcode === 'undefined') {
-          toast('โหลดตัวสแกนไม่สำเร็จ');
-          return Promise.resolve(false);
-        }
-        if (!scanner) scanner = new Html5Qrcode('reader');
-        function begin(cameraConfig) {
-          var boxFn = function (w, h) {
-            var s = Math.floor(Math.min(w, h) * 0.62);
-            return { width: s, height: s };
-          };
-          return scanner.start(cameraConfig, { fps: 8, qrbox: boxFn }, onScan);
-        }
-        return begin({ facingMode: { ideal: 'user' } }).then(function () {
-          scanning = true;
-          return true;
-        }).catch(function () {
-          return begin({ facingMode: 'environment' }).then(function () {
-            scanning = true;
-            toast('ใช้กล้องหลังแทน เพราะเปิดกล้องหน้าไม่ได้');
-            return true;
-          }).catch(function (err) {
-            toast('เปิดกล้องไม่ได้: ' + ((err && err.message) || err));
-            return false;
-          });
-        });
-      }
-
       function startKiosk() {
         unlockAudio();
         requestWakeLock();
+        kioskStarted = true;
         $('startScreen').classList.add('hidden');
-        startCamera().then(function (ok) {
-          if (!ok) toast('ยังเปิดกล้องไม่ได้ แต่พร้อมเมื่ออนุญาตกล้องแล้ว กดเริ่มอีกครั้งได้');
-        });
+        updateCamUi();
+        startCamera();
       }
 
       $('btnStart').onclick = function () { startKiosk(); };
+      $('btnOpenCam').onclick = function () {
+        if (!kioskStarted) startKiosk();
+        else startCamera();
+      };
+      $('btnFlipCam').onclick = function () {
+        cam.facing = cam.facing === 'user' ? 'environment' : 'user';
+        updateCamUi();
+        if (!kioskStarted) startKiosk();
+        else startCamera();
+      };
+
+      function decodeImageFile(file) {
+        return new Promise(function (resolve, reject) {
+          if (!file) return reject(new Error('ไม่มีรูป'));
+          if (typeof jsQR !== 'function') return reject(new Error('โหลดตัวอ่าน QR ไม่สำเร็จ'));
+          var url = URL.createObjectURL(file);
+          var img = new Image();
+          img.onload = function () {
+            try {
+              var maxEdge = 1600;
+              var scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+              var w = Math.max(32, Math.round(img.width * scale));
+              var h = Math.max(32, Math.round(img.height * scale));
+              var canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              var ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              var imgData = ctx.getImageData(0, 0, w, h);
+              var result = jsQR(imgData.data, w, h, { inversionAttempts: 'attemptBoth' });
+              URL.revokeObjectURL(url);
+              if (result && result.data) resolve(result.data);
+              else reject(new Error('อ่าน QR จากรูปไม่สำเร็จ กรุณาถ่ายใหม่ให้ชัด หรือพิมพ์รหัสแขกแทน'));
+            } catch (e) {
+              URL.revokeObjectURL(url);
+              reject(e);
+            }
+          };
+          img.onerror = function () {
+            URL.revokeObjectURL(url);
+            reject(new Error('เปิดรูปไม่สำเร็จ'));
+          };
+          img.src = url;
+        });
+      }
+
+      $('qrPhoto').addEventListener('change', function (e) {
+        var file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        decodeImageFile(file).then(function (text) {
+          onScan(text);
+        }).catch(function (err) {
+          toast((err && err.message) || 'อ่าน QR จากรูปไม่สำเร็จ');
+        });
+      });
+
+      $('btnManual').onclick = function () {
+        var form = $('manualForm');
+        var panel = $('camPanel');
+        var open = form.classList.contains('hidden');
+        form.classList.toggle('hidden', !open);
+        panel.classList.toggle('show-manual', open);
+        if (open) setTimeout(function () { try { $('manualId').focus(); } catch (e) {} }, 50);
+      };
+
+      $('manualForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var text = String($('manualId').value || '').trim().toUpperCase();
+        if (!text) {
+          toast('กรุณาพิมพ์รหัสแขกบนการ์ด QR');
+          return;
+        }
+        onScan(text);
+      });
 
       window.__kioskPreview = function (kind, visitor, message) {
         $('pinScreen').classList.add('hidden');
         $('startScreen').classList.add('hidden');
+        kioskStarted = true;
         if (kind === 'idle') {
           hideOverlay();
-          if (!scanning) startCamera();
+          updateCamUi();
+          if (!cam.running) startCamera();
+          return;
+        }
+        if (kind === 'camera-needed') {
+          hideOverlay();
+          cam.running = false;
+          showCamError('');
+          updateCamUi();
+          return;
+        }
+        if (kind === 'camera-error') {
+          hideOverlay();
+          cam.running = false;
+          showCamError(cameraHelpText('denied'));
+          updateCamUi();
           return;
         }
         showOverlay(kind, visitor, message);
       };
+      window.__kioskBuild = KIOSK_BUILD;
 
       var saved = '';
       try { saved = localStorage.getItem(PIN_KEY) || ''; } catch (e) { saved = ''; }
@@ -847,6 +1289,7 @@
           }
         });
       }
+      updateCamUi();
     })();
   </script>
 </body>
