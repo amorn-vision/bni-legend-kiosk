@@ -32,7 +32,9 @@ The site must be served over **HTTPS** or the browser will not open the camera.
 2. Tab **ทีมงาน** → **ตั้งค่าคีออสก์**: set a 4–12 character PIN, paste the HTTPS kiosk URL, save both.
 3. Open that URL on the tablet, enter the same PIN, allow the camera, then tap **เริ่มโหมดคีออสก์**.
 
-Until a PIN is saved, the API refuses every request.
+Until a PIN is saved, the API refuses every request. The server checks the PIN on every API call (`kioskEvents`, `kioskCounts`, `kioskCheckin`).
+
+The kiosk no longer keeps the PIN in `localStorage`. A fresh open of the page (new tab or after the tab was closed) always asks for the PIN again. A refresh in the same tab may keep the PIN in `sessionStorage` for at most 12 hours. Staff can also tap **🔒 ล็อก** to clear it and return to the PIN screen. If the server rejects a saved PIN, the PIN screen is shown immediately.
 
 API base URL is set once at the top of `index.html` (`API_BASE`) and points at the TEST public deployment.
 
@@ -53,3 +55,14 @@ Chrome on iPad uses the same WebKit engine as Safari, so both need camera permis
 - Close the tab, reopen it (or refresh), then tap **เปิดกล้อง**.
 
 Front camera is the default (kiosk facing the visitor). Use **สลับเป็นกล้องหลัง** to switch. If live scan still fails, use **ถ่ายหรือเลือกรูป QR** or **พิมพ์รหัสแขก** (the code printed under the QR, for example `V-20261113-B7MWXP`).
+
+## iPad sound (Chrome or Safari)
+
+iOS WebKit blocks `speechSynthesis` and Web Audio until they are unlocked by a tap. The kiosk unlocks both when staff submit the PIN, tap **เปิดกล้อง**, or tap **🔊 ลองเสียง**. The welcome chime is a Web Audio oscillator (not an audio file). The spoken welcome uses a Thai (`th-TH`) voice when the iPad has one.
+
+If there is no sound after a successful scan:
+
+1. Close the old tab and reopen the kiosk URL.
+2. Enter the PIN, then tap **เปิดกล้อง** (and allow the camera if asked).
+3. Tap **🔊 ลองเสียง**. You should hear a short chime and the phrase “พร้อมใช้งาน”.
+4. Check that the iPad is not muted (the side Switch / Control Center ringer) and that the volume is turned up.

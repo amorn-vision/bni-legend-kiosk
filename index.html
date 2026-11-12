@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-kiosk-build="2026-11-13-ipad-sound">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -279,6 +279,20 @@
       opacity: 0; pointer-events: none; transition: .2s; z-index: 50; max-width: calc(100% - 32px);
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .sound-hint {
+      color: #F0D9A8 !important;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .kiosk-sound-note {
+      width: 100%;
+      margin-top: 8px;
+      text-align: center;
+      color: #F0D9A8;
+      font-size: 13px;
+      font-weight: 600;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.65);
+    }
     @media (orientation: landscape) {
       .kiosk-hello { font-size: clamp(32px, 6vh, 64px); }
       .kiosk-guest { font-size: clamp(28px, 5.5vh, 56px); }
@@ -314,8 +328,10 @@
         </div>
       </div>
       <div class="kiosk-tools">
+        <button type="button" class="btn btn-ghost" id="btnTestSound" aria-label="ลองเสียง">🔊 ลองเสียง</button>
         <button type="button" class="btn btn-ghost" id="btnMute">ปิดเสียง</button>
         <button type="button" class="btn btn-ghost" id="btnFull">เต็มจอ</button>
+        <button type="button" class="btn btn-ghost" id="btnLock">🔒 ล็อก</button>
         <button type="button" class="btn btn-ghost" id="btnChangePin">เปลี่ยน PIN</button>
       </div>
     </header>
@@ -366,12 +382,14 @@
             </div>
           </form>
         </div>
+        <p class="kiosk-sound-note" id="soundNote">ถ้าไม่มีเสียง ให้ตรวจว่า iPad ไม่ได้ปิดเสียง และเปิดระดับเสียง แล้วกด 🔊 ลองเสียง</p>
       </div>
       <div class="kiosk-start hidden" id="startScreen">
         <div>
           <div class="kiosk-kicker">GIVERS GAIN</div>
           <h1>ยินดีต้อนรับสู่<br>BNI Legend Chapter</h1>
           <p>ตั้งแท็บเล็ตที่โต๊ะลงทะเบียน โดยหันกล้องหน้าเข้าหาแขก จากนั้นกดเปิดกล้องและอนุญาตเมื่อมีข้อความเด้งขึ้น ระบบจะเช็กอินให้อัตโนมัติเมื่อสแกนการ์ด QR</p>
+          <p class="sound-hint">ถ้าไม่มีเสียงต้อนรับ ให้ตรวจว่า iPad ไม่ได้ปิดเสียงที่สวิตช์ข้างเครื่อง และเปิดระดับเสียงไว้ แล้วกดปุ่ม 🔊 ลองเสียง</p>
           <button type="button" class="btn btn-primary" id="btnStart" style="width:auto;min-width:260px;font-size:22px;padding:16px 28px">เปิดกล้อง</button>
         </div>
       </div>
@@ -379,7 +397,8 @@
         <div>
           <div class="kiosk-kicker">GIVERS GAIN</div>
           <h1>ใส่รหัส PIN ของคีออสก์</h1>
-          <p>รหัสนี้ตั้งโดยแอดมินในหลังบ้าน เครื่องนี้จำ PIN ไว้ให้จนกว่าจะกดเปลี่ยน</p>
+          <p>รหัสนี้ตั้งโดยแอดมินในหลังบ้าน เมื่อปิดแท็บแล้วเปิดใหม่ จะต้องใส่ PIN อีกครั้ง</p>
+          <p class="sound-hint">ถ้าไม่มีเสียง ให้ตรวจว่า iPad ไม่ได้ปิดเสียงที่สวิตช์ข้างเครื่อง และเปิดระดับเสียงไว้</p>
           <form class="pin-form" id="pinForm" autocomplete="off">
             <label for="pinInput">รหัส PIN</label>
             <input id="pinInput" type="password" inputmode="numeric" maxlength="12" autocomplete="off" autofocus>
@@ -407,11 +426,13 @@
     (function () {
       var API_BASE = 'https://script.google.com/macros/s/AKfycbxgs91gTdaI8mZ4I3mlhRdcq26wDL8yKDmWDmWlIktCCeE8dXg3auxHAfdIhWmCezEB/exec';
       var PIN_KEY = 'bniLegendKioskPin';
+      var PIN_AT_KEY = 'bniLegendKioskPinAt';
+      var PIN_MAX_AGE_MS = 12 * 60 * 60 * 1000;
       var DEBOUNCE_MS = 8000;
       var WELCOME_MS = 4000;
       var WARN_MS = 3200;
       var COUNT_POLL_MS = 30000;
-      var KIOSK_BUILD = '2026-11-13-ipad-cam';
+      var KIOSK_BUILD = '2026-11-13-ipad-sound';
 
       var currentPin = '';
       var events = [];
@@ -761,14 +782,40 @@
         updateCamUi();
       }
 
+      function clearStoredPins_() {
+        try {
+          sessionStorage.removeItem(PIN_KEY);
+          sessionStorage.removeItem(PIN_AT_KEY);
+        } catch (e) {}
+        try { localStorage.removeItem(PIN_KEY); } catch (e) {}
+        try { localStorage.removeItem(PIN_AT_KEY); } catch (e) {}
+      }
+
       function rememberPin(pin) {
         currentPin = pin;
-        try { localStorage.setItem(PIN_KEY, pin); } catch (e) {}
+        try {
+          sessionStorage.setItem(PIN_KEY, pin);
+          sessionStorage.setItem(PIN_AT_KEY, String(Date.now()));
+        } catch (e) {}
+        try { localStorage.removeItem(PIN_KEY); } catch (e) {}
+        try { localStorage.removeItem(PIN_AT_KEY); } catch (e) {}
       }
 
       function forgetPin() {
         currentPin = '';
+        clearStoredPins_();
+      }
+
+      function readSessionPin() {
         try { localStorage.removeItem(PIN_KEY); } catch (e) {}
+        try { localStorage.removeItem(PIN_AT_KEY); } catch (e) {}
+        try {
+          var pin = sessionStorage.getItem(PIN_KEY) || '';
+          var at = parseInt(sessionStorage.getItem(PIN_AT_KEY) || '0', 10);
+          if (pin && at && (Date.now() - at) <= PIN_MAX_AGE_MS) return pin;
+        } catch (e) {}
+        clearStoredPins_();
+        return '';
       }
 
       function applyCounts(counts) {
@@ -844,6 +891,7 @@
 
       $('pinForm').addEventListener('submit', function (e) {
         e.preventDefault();
+        unlockAudio();
         submitPin($('pinInput').value);
       });
 
@@ -858,6 +906,8 @@
         if (document.visibilityState === 'visible') {
           refreshCounts();
           requestWakeLock();
+          try { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {}
+          resumeSpeechEngine();
           if (kioskStarted && !cam.running && !cam.starting) {
             showCamError('หน้าจอกลับมาแล้ว กรุณากด “เปิดกล้อง” อีกครั้งเพื่อสแกนต่อ');
             updateCamUi();
@@ -865,23 +915,15 @@
         }
       });
 
-      function unlockAudio() {
-        try {
-          var Ctx = window.AudioContext || window.webkitAudioContext;
-          if (!Ctx) return;
-          if (!audioCtx) audioCtx = new Ctx();
-          if (audioCtx.state === 'suspended') audioCtx.resume();
-        } catch (e) {}
-        unlockSpeech();
-      }
-
       var thaiVoice = null;
       var speechTimer = null;
+      var speechWatch = null;
       var speechUnlocked = false;
       var onWelcomeSpeechEnded = null;
 
       function refreshThaiVoice() {
         thaiVoice = pickThaiVoice();
+        return thaiVoice;
       }
 
       function pickThaiVoice() {
@@ -908,17 +950,125 @@
         speechSynthesis.onvoiceschanged = refreshThaiVoice;
       }
 
+      function resumeSpeechEngine() {
+        if (!window.speechSynthesis) return;
+        try { speechSynthesis.resume(); } catch (e) {}
+      }
+
+      function watchSpeechUntilIdle() {
+        resumeSpeechEngine();
+        if (speechWatch) return;
+        speechWatch = setInterval(function () {
+          if (!window.speechSynthesis) {
+            clearInterval(speechWatch);
+            speechWatch = null;
+            return;
+          }
+          try {
+            if (speechSynthesis.speaking || speechSynthesis.pending) {
+              speechSynthesis.resume();
+            } else {
+              clearInterval(speechWatch);
+              speechWatch = null;
+            }
+          } catch (e) {
+            clearInterval(speechWatch);
+            speechWatch = null;
+          }
+        }, 250);
+      }
+
+      function unlockAudio() {
+        try {
+          var Ctx = window.AudioContext || window.webkitAudioContext;
+          if (Ctx) {
+            if (!audioCtx) audioCtx = new Ctx();
+            if (audioCtx.state === 'suspended') {
+              var resumed = audioCtx.resume();
+              if (resumed && resumed.catch) resumed.catch(function () {});
+            }
+            var rate = audioCtx.sampleRate || 22050;
+            var frames = Math.max(1, Math.floor(rate * 0.05));
+            var buffer = audioCtx.createBuffer(1, frames, rate);
+            var source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            var gain = audioCtx.createGain();
+            gain.gain.value = 0.0001;
+            source.connect(gain);
+            gain.connect(audioCtx.destination);
+            if (source.start) source.start(0);
+            else source.noteOn(0);
+          }
+        } catch (e) {}
+        unlockSpeech();
+        return {
+          hasCtx: !!audioCtx,
+          ctxState: audioCtx ? audioCtx.state : null,
+          speechUnlocked: speechUnlocked
+        };
+      }
+
       function unlockSpeech() {
-        if (speechUnlocked || !window.speechSynthesis) return;
+        if (!window.speechSynthesis) return;
         try {
           speechSynthesis.getVoices();
+          refreshThaiVoice();
+          if (speechUnlocked && (speechSynthesis.speaking || speechSynthesis.pending)) {
+            resumeSpeechEngine();
+            return;
+          }
           var u = new SpeechSynthesisUtterance(' ');
           u.lang = 'th-TH';
           u.volume = 0;
+          u.rate = 1;
+          if (thaiVoice) u.voice = thaiVoice;
           speechSynthesis.speak(u);
-          speechSynthesis.cancel();
           speechUnlocked = true;
+          watchSpeechUntilIdle();
         } catch (e) {}
+      }
+
+      function speakText(text, opts) {
+        opts = opts || {};
+        if (!window.speechSynthesis) {
+          if (opts.onend) opts.onend();
+          return false;
+        }
+        if (muted && !opts.force) {
+          if (opts.onend) opts.onend();
+          return false;
+        }
+        text = String(text || '').trim();
+        if (!text) {
+          if (opts.onend) opts.onend();
+          return false;
+        }
+        refreshThaiVoice();
+        try {
+          try { speechSynthesis.cancel(); } catch (e1) {}
+          resumeSpeechEngine();
+          var u = new SpeechSynthesisUtterance(text);
+          u.lang = 'th-TH';
+          u.rate = opts.rate || 0.95;
+          u.volume = 1;
+          if (thaiVoice) u.voice = thaiVoice;
+          var finished = false;
+          function done() {
+            if (finished) return;
+            finished = true;
+            if (opts.onend) opts.onend();
+          }
+          u.onend = done;
+          u.onerror = done;
+          speechSynthesis.speak(u);
+          speechUnlocked = true;
+          watchSpeechUntilIdle();
+          setTimeout(done, opts.timeout || 8000);
+          return true;
+        } catch (e) {
+          if (opts.onend) opts.onend();
+          return false;
+        }
       }
 
       function cancelWelcomeSpeech() {
@@ -959,24 +1109,8 @@
             notifySpeechEnded();
             return;
           }
-          refreshThaiVoice();
-          if (!thaiVoice) {
-            notifySpeechEnded();
-            return;
-          }
-          try {
-            speechSynthesis.cancel();
-            var u = new SpeechSynthesisUtterance(text);
-            u.lang = 'th-TH';
-            u.rate = 0.95;
-            u.voice = thaiVoice;
-            u.onend = function () { notifySpeechEnded(); };
-            u.onerror = function () { notifySpeechEnded(); };
-            speechSynthesis.speak(u);
-          } catch (e) {
-            notifySpeechEnded();
-          }
-        }, 600);
+          speakText(text, { onend: notifySpeechEnded });
+        }, 500);
         return true;
       }
 
@@ -1018,10 +1152,8 @@
         resetTimer = setTimeout(tryClose, WELCOME_MS);
       }
 
-      function playWelcomeChime() {
-        if (muted) return;
-        unlockAudio();
-        if (!audioCtx) return;
+      function playOscillatorChime() {
+        if (!audioCtx || muted) return;
         try {
           var now = audioCtx.currentTime;
           [523.25, 659.25, 783.99].forEach(function (freq, i) {
@@ -1038,6 +1170,16 @@
             o.stop(now + 0.55 + i * 0.09);
           });
         } catch (e) {}
+      }
+
+      function playWelcomeChime() {
+        if (muted) return;
+        unlockAudio();
+        playOscillatorChime();
+        if (audioCtx && audioCtx.state === 'suspended') {
+          var p = audioCtx.resume();
+          if (p && p.then) p.then(playOscillatorChime).catch(function () {});
+        }
       }
 
       function requestWakeLock() {
@@ -1059,13 +1201,36 @@
         }
       }
 
+      function syncMuteButton() {
+        $('btnMute').textContent = muted ? 'เปิดเสียง' : 'ปิดเสียง';
+      }
+
+      function testSound() {
+        muted = false;
+        syncMuteButton();
+        unlockAudio();
+        playWelcomeChime();
+        speakText('พร้อมใช้งาน', { force: true });
+        toast('ถ้ายังไม่ได้ยิน ให้ปลดล็อกสวิตช์ปิดเสียงข้าง iPad แล้วเปิดระดับเสียง');
+      }
+
+      function lockKiosk() {
+        forgetPin();
+        hideOverlay();
+        busy = false;
+        showPinScreen('');
+        toast('ล็อกคีออสก์แล้ว กรุณาใส่รหัส PIN อีกครั้ง');
+      }
+
       $('btnFull').onclick = function () { toggleFullscreen(); };
       $('btnMute').onclick = function () {
         muted = !muted;
-        $('btnMute').textContent = muted ? 'เปิดเสียง' : 'ปิดเสียง';
+        syncMuteButton();
         if (muted) cancelWelcomeSpeech();
         else unlockAudio();
       };
+      $('btnTestSound').onclick = function () { testSound(); };
+      $('btnLock').onclick = function () { lockKiosk(); };
 
       function guestName(v) {
         if (!v) return '';
@@ -1174,12 +1339,17 @@
         startCamera();
       }
 
-      $('btnStart').onclick = function () { startKiosk(); };
+      $('btnStart').onclick = function () {
+        unlockAudio();
+        startKiosk();
+      };
       $('btnOpenCam').onclick = function () {
+        unlockAudio();
         if (!kioskStarted) startKiosk();
         else startCamera();
       };
       $('btnFlipCam').onclick = function () {
+        unlockAudio();
         cam.facing = cam.facing === 'user' ? 'environment' : 'user';
         updateCamUi();
         if (!kioskStarted) startKiosk();
@@ -1278,9 +1448,25 @@
         showOverlay(kind, visitor, message);
       };
       window.__kioskBuild = KIOSK_BUILD;
+      window.__kioskTest = {
+        unlockAudio: unlockAudio,
+        testSound: testSound,
+        lockKiosk: lockKiosk,
+        readSessionPin: readSessionPin,
+        audioState: function () {
+          return {
+            hasCtx: !!audioCtx,
+            ctxState: audioCtx ? audioCtx.state : null,
+            speechUnlocked: speechUnlocked,
+            muted: muted,
+            thaiVoice: thaiVoice ? String(thaiVoice.name || '') + ' ' + String(thaiVoice.lang || '') : '',
+            pinScreenHidden: $('pinScreen').classList.contains('hidden'),
+            hasCurrentPin: !!currentPin
+          };
+        }
+      };
 
-      var saved = '';
-      try { saved = localStorage.getItem(PIN_KEY) || ''; } catch (e) { saved = ''; }
+      var saved = readSessionPin();
       if (saved) {
         submitPin(saved).then(function (ok) {
           if (!ok) {
