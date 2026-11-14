@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th" data-kiosk-build="2026-11-13-ipad-sound">
+<html lang="th" data-kiosk-build="2026-11-15-prompt-lift">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -17,6 +17,11 @@
       --gold: #C6A15B;
       --ink: #1B1B1B;
       --line: #E6E0DC;
+      --kiosk-safe-top: env(safe-area-inset-top, 0px);
+      --kiosk-safe-bottom: env(safe-area-inset-bottom, 0px);
+      --kiosk-safe-left: env(safe-area-inset-left, 0px);
+      --kiosk-safe-right: env(safe-area-inset-right, 0px);
+      --kiosk-controls-h: 136px;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -59,6 +64,9 @@
     .kiosk-top {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
       padding: 10px 14px;
+      padding-top: max(10px, var(--kiosk-safe-top));
+      padding-left: max(14px, var(--kiosk-safe-left));
+      padding-right: max(14px, var(--kiosk-safe-right));
       background: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 100%);
       z-index: 5;
     }
@@ -93,7 +101,11 @@
       pointer-events: none;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      padding-top: 86px; padding-bottom: 168px;
+      gap: 10px;
+      padding-top: 86px;
+      padding-bottom: calc(var(--kiosk-controls-h) + var(--kiosk-safe-bottom) + 8px);
+      padding-left: max(8px, var(--kiosk-safe-left));
+      padding-right: max(8px, var(--kiosk-safe-right));
     }
     .kiosk-stats {
       position: absolute; top: 12px; left: 50%;
@@ -138,8 +150,10 @@
       50% { opacity: 0.65; transform: scale(0.985); }
     }
     .kiosk-idle-copy {
-      position: absolute; left: 50%; bottom: 22px;
-      transform: translateX(-50%);
+      position: relative;
+      left: auto; bottom: auto;
+      transform: none;
+      margin-top: auto;
       width: min(880px, calc(100% - 32px));
       text-align: center;
       background: rgba(10, 4, 6, 0.78);
@@ -147,6 +161,8 @@
       border-radius: 22px;
       padding: 14px 22px 16px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+      flex: 0 0 auto;
+      z-index: 3;
     }
     .kiosk-idle-title {
       margin: 0; font-size: clamp(24px, 4.4vw, 40px);
@@ -167,7 +183,8 @@
       inset: auto; left: 0; right: 0; bottom: 0;
       background: transparent;
       justify-content: flex-end;
-      padding: 0 16px 12px;
+      padding: 0 max(16px, var(--kiosk-safe-right)) calc(10px + var(--kiosk-safe-bottom));
+      padding-left: max(16px, var(--kiosk-safe-left));
     }
     .kiosk-cam-panel.behind-start { visibility: hidden; }
     .btn-open-cam {
@@ -274,7 +291,7 @@
       to { opacity: 1; transform: scale(1); }
     }
     .toast {
-      position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px);
+      position: fixed; left: 50%; bottom: calc(20px + var(--kiosk-safe-bottom)); transform: translateX(-50%) translateY(20px);
       background: #1B1B1B; color: #fff; padding: 10px 14px; border-radius: 999px;
       opacity: 0; pointer-events: none; transition: .2s; z-index: 50; max-width: calc(100% - 32px);
     }
@@ -294,23 +311,43 @@
       text-shadow: 0 1px 4px rgba(0,0,0,0.65);
     }
     @media (orientation: landscape) {
+      :root { --kiosk-controls-h: 110px; }
       .kiosk-hello { font-size: clamp(32px, 6vh, 64px); }
       .kiosk-guest { font-size: clamp(28px, 5.5vh, 56px); }
       .kiosk-viewfinder { width: min(48vh, 340px); }
-      .kiosk-idle-title { font-size: clamp(24px, 4.8vh, 38px); }
-      .kiosk-idle-ui { padding-top: 100px; padding-bottom: 118px; }
+      .kiosk-idle-title { font-size: clamp(22px, 4.6vh, 36px); }
+      .kiosk-idle-ui { padding-top: 86px; }
+    }
+    @media (orientation: landscape) and (max-height: 700px) {
+      :root { --kiosk-controls-h: 100px; }
+      .kiosk-viewfinder { width: min(36vh, 220px); }
+      .kiosk-idle-copy { padding: 10px 16px 11px; border-radius: 18px; }
+      .kiosk-idle-title { font-size: clamp(18px, 4vh, 26px); }
+      .kiosk-idle-sub { font-size: clamp(13px, 2.4vh, 16px); margin-top: 4px; }
+      .kiosk-stats { top: 8px; }
+      .kiosk-stat b { font-size: clamp(18px, 3.4vh, 24px); }
+      .kiosk-sound-note { font-size: 12px; margin-top: 4px; }
+    }
+    @media (orientation: landscape) and (max-height: 580px) {
+      :root { --kiosk-controls-h: 92px; }
+      .kiosk-viewfinder { width: min(30vh, 170px); }
+      .kiosk-idle-ui { padding-top: 72px; }
+      .kiosk-idle-copy { padding: 8px 14px 9px; border-radius: 16px; }
+      .kiosk-idle-title { font-size: clamp(16px, 3.6vh, 22px); }
+      .kiosk-alt .btn, .kiosk-alt label.btn { padding: 8px 12px; font-size: 13px; }
     }
     @media (orientation: portrait) and (max-width: 640px) {
-      .kiosk-top { padding: 8px 10px; }
+      :root { --kiosk-controls-h: 176px; }
+      .kiosk-top { padding: 8px 10px; padding-top: max(8px, var(--kiosk-safe-top)); padding-left: max(10px, var(--kiosk-safe-left)); padding-right: max(10px, var(--kiosk-safe-right)); }
       .kiosk-tools .btn { padding: 6px 9px; font-size: 12px; }
       .kiosk-event { padding: 6px 10px; }
-      .kiosk-idle-ui { padding-top: 92px; padding-bottom: 150px; }
+      .kiosk-idle-ui { padding-top: 92px; }
       .kiosk-stats { top: 8px; width: min(100%, calc(100% - 16px)); gap: 8px; }
       .kiosk-stat { padding: 7px 8px 8px; border-radius: 14px; }
       .kiosk-stat b { font-size: clamp(20px, 6vw, 26px); }
       .kiosk-stat > span { font-size: 11px; }
       .kiosk-viewfinder { width: min(58vmin, 280px); }
-      .kiosk-idle-copy { bottom: 12px; padding: 12px 14px 13px; border-radius: 18px; width: min(100%, calc(100% - 16px)); }
+      .kiosk-idle-copy { padding: 12px 14px 13px; border-radius: 18px; width: min(100%, calc(100% - 16px)); }
       .kiosk-idle-title { font-size: clamp(20px, 5.6vw, 28px); }
       .kiosk-idle-sub { font-size: 14px; }
       .btn-open-cam { font-size: 22px; min-height: 60px; }
