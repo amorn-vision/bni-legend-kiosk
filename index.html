@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th" data-kiosk-build="2026-11-15-prompt-lift">
+<html lang="th" data-kiosk-build="2026-11-15-scan-center">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -21,7 +21,7 @@
       --kiosk-safe-bottom: env(safe-area-inset-bottom, 0px);
       --kiosk-safe-left: env(safe-area-inset-left, 0px);
       --kiosk-safe-right: env(safe-area-inset-right, 0px);
-      --kiosk-controls-h: 136px;
+      --kiosk-controls-h: 120px;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
@@ -99,19 +99,24 @@
     .kiosk-idle-ui {
       position: absolute; inset: 0; z-index: 3;
       pointer-events: none;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 10px;
-      padding-top: 86px;
-      padding-bottom: calc(var(--kiosk-controls-h) + var(--kiosk-safe-bottom) + 8px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+      align-items: center;
+      gap: 10px 0;
+      padding-top: 10px;
+      padding-bottom: calc(var(--kiosk-controls-h) + var(--kiosk-safe-bottom) + 4px);
       padding-left: max(8px, var(--kiosk-safe-left));
       padding-right: max(8px, var(--kiosk-safe-right));
     }
     .kiosk-stats {
-      position: absolute; top: 12px; left: 50%;
-      transform: translateX(-50%);
+      position: relative;
+      top: auto; left: auto;
+      transform: none;
       display: flex; gap: 10px;
-      width: min(520px, calc(100% - 24px));
+      width: min(520px, 100%);
+      z-index: 4;
     }
     .kiosk-stat {
       flex: 1;
@@ -133,7 +138,14 @@
     }
     .kiosk-stat-arrived b { color: #F4EEE8; }
     .kiosk-viewfinder {
-      width: min(62vmin, 420px); aspect-ratio: 1; position: relative;
+      width: min(62vmin, 420px, 100%);
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 1;
+      height: auto;
+      position: relative;
+      align-self: center;
+      justify-self: center;
       animation: vfPulse 2.2s ease-in-out infinite;
     }
     .kiosk-viewfinder .vf {
@@ -153,16 +165,17 @@
       position: relative;
       left: auto; bottom: auto;
       transform: none;
-      margin-top: auto;
-      width: min(880px, calc(100% - 32px));
+      margin: 0;
+      width: min(880px, 100%);
       text-align: center;
       background: rgba(10, 4, 6, 0.78);
       border: 1px solid rgba(198,161,91,0.55);
       border-radius: 22px;
       padding: 14px 22px 16px;
       box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-      flex: 0 0 auto;
       z-index: 3;
+      align-self: end;
+      justify-self: center;
     }
     .kiosk-idle-title {
       margin: 0; font-size: clamp(24px, 4.4vw, 40px);
@@ -183,7 +196,7 @@
       inset: auto; left: 0; right: 0; bottom: 0;
       background: transparent;
       justify-content: flex-end;
-      padding: 0 max(16px, var(--kiosk-safe-right)) calc(10px + var(--kiosk-safe-bottom));
+      padding: 0 max(16px, var(--kiosk-safe-right)) calc(6px + var(--kiosk-safe-bottom));
       padding-left: max(16px, var(--kiosk-safe-left));
     }
     .kiosk-cam-panel.behind-start { visibility: hidden; }
@@ -311,42 +324,41 @@
       text-shadow: 0 1px 4px rgba(0,0,0,0.65);
     }
     @media (orientation: landscape) {
-      :root { --kiosk-controls-h: 110px; }
+      :root { --kiosk-controls-h: 96px; }
       .kiosk-hello { font-size: clamp(32px, 6vh, 64px); }
       .kiosk-guest { font-size: clamp(28px, 5.5vh, 56px); }
-      .kiosk-viewfinder { width: min(48vh, 340px); }
+      .kiosk-viewfinder { width: min(48vh, 340px, 100%); }
       .kiosk-idle-title { font-size: clamp(22px, 4.6vh, 36px); }
-      .kiosk-idle-ui { padding-top: 86px; }
     }
     @media (orientation: landscape) and (max-height: 700px) {
-      :root { --kiosk-controls-h: 100px; }
-      .kiosk-viewfinder { width: min(36vh, 220px); }
+      :root { --kiosk-controls-h: 88px; }
+      .kiosk-viewfinder { width: min(36vh, 220px, 100%); }
       .kiosk-idle-copy { padding: 10px 16px 11px; border-radius: 18px; }
       .kiosk-idle-title { font-size: clamp(18px, 4vh, 26px); }
       .kiosk-idle-sub { font-size: clamp(13px, 2.4vh, 16px); margin-top: 4px; }
-      .kiosk-stats { top: 8px; }
+      .kiosk-stats { margin-top: 0; }
       .kiosk-stat b { font-size: clamp(18px, 3.4vh, 24px); }
       .kiosk-sound-note { font-size: 12px; margin-top: 4px; }
     }
     @media (orientation: landscape) and (max-height: 580px) {
-      :root { --kiosk-controls-h: 92px; }
-      .kiosk-viewfinder { width: min(30vh, 170px); }
-      .kiosk-idle-ui { padding-top: 72px; }
+      :root { --kiosk-controls-h: 80px; }
+      .kiosk-viewfinder { width: min(30vh, 170px, 100%); }
+      .kiosk-idle-ui { padding-top: 8px; gap: 8px 0; }
       .kiosk-idle-copy { padding: 8px 14px 9px; border-radius: 16px; }
       .kiosk-idle-title { font-size: clamp(16px, 3.6vh, 22px); }
       .kiosk-alt .btn, .kiosk-alt label.btn { padding: 8px 12px; font-size: 13px; }
     }
     @media (orientation: portrait) and (max-width: 640px) {
-      :root { --kiosk-controls-h: 176px; }
+      :root { --kiosk-controls-h: 156px; }
       .kiosk-top { padding: 8px 10px; padding-top: max(8px, var(--kiosk-safe-top)); padding-left: max(10px, var(--kiosk-safe-left)); padding-right: max(10px, var(--kiosk-safe-right)); }
       .kiosk-tools .btn { padding: 6px 9px; font-size: 12px; }
       .kiosk-event { padding: 6px 10px; }
-      .kiosk-idle-ui { padding-top: 92px; }
-      .kiosk-stats { top: 8px; width: min(100%, calc(100% - 16px)); gap: 8px; }
+      .kiosk-idle-ui { padding-top: 8px; }
+      .kiosk-stats { width: min(100%, 100%); gap: 8px; }
       .kiosk-stat { padding: 7px 8px 8px; border-radius: 14px; }
       .kiosk-stat b { font-size: clamp(20px, 6vw, 26px); }
       .kiosk-stat > span { font-size: 11px; }
-      .kiosk-viewfinder { width: min(58vmin, 280px); }
+      .kiosk-viewfinder { width: min(58vmin, 280px, 100%); }
       .kiosk-idle-copy { padding: 12px 14px 13px; border-radius: 18px; width: min(100%, calc(100% - 16px)); }
       .kiosk-idle-title { font-size: clamp(20px, 5.6vw, 28px); }
       .kiosk-idle-sub { font-size: 14px; }
@@ -469,7 +481,7 @@
       var WELCOME_MS = 4000;
       var WARN_MS = 3200;
       var COUNT_POLL_MS = 30000;
-      var KIOSK_BUILD = '2026-11-13-ipad-sound';
+      var KIOSK_BUILD = '2026-11-15-scan-center';
 
       var currentPin = '';
       var events = [];
