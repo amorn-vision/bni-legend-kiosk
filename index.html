@@ -585,8 +585,20 @@
         if (cam.running) showCamError('');
       }
 
+      function detectDevice_() {
+        var ua = '';
+        try { ua = String(navigator.userAgent || ''); } catch (err) { ua = ''; }
+        var u = ua.toLowerCase();
+        var touch = 0;
+        try { touch = Number(navigator.maxTouchPoints) || 0; } catch (err) { touch = 0; }
+        if (/ipad/.test(u) || (/macintosh/.test(u) && touch > 1) ||
+            (/android/.test(u) && !/mobile/.test(u)) || /tablet/.test(u)) return 'แท็บเล็ต';
+        if (/mobi|iphone|ipod|android.*mobile|windows phone/.test(u)) return 'มือถือ';
+        return 'คอม';
+      }
+
       function api(action, extra) {
-        var body = { action: action, pin: currentPin };
+        var body = { action: action, pin: currentPin, device: detectDevice_() };
         if (extra) {
           Object.keys(extra).forEach(function (k) { body[k] = extra[k]; });
         }
